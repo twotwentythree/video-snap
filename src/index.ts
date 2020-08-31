@@ -42,7 +42,7 @@ export class VideoSnap {
      *
      * @return Promise with array of Blob URLs to captured images.
      */
-    public async getFrames(numberOfFrames: number, config: Config = {}): Promise<string[]> {
+    public async getFrames(numberOfFrames: number, config: Config = {}): Promise<Blob[]> {
         if (this.video.readyState !== VIDEO_READY_STATE) {
             await this.waitVideoLoading(config.maxVideoLoadTime);
         }
@@ -62,7 +62,7 @@ export class VideoSnap {
      *
      * @return Promise with Blob URL to captured image.
      */
-    public async getFrameFrom(time: number, config: Config = {}): Promise<string> {
+    public async getFrameFrom(time: number, config: Config = {}): Promise<Blob> {
         if (this.video.readyState !== VIDEO_READY_STATE) {
             await this.waitVideoLoading(config.maxVideoLoadTime);
         }
@@ -113,7 +113,7 @@ export class VideoSnap {
      *
      * @return Promise with array of Blob url's to images
      */
-    private async getEvenlyDistributedImages(numberOfImages: number, config: Config): Promise<string[]> {
+    private async getEvenlyDistributedImages(numberOfImages: number, config: Config): Promise<Blob[]> {
         const images = [];
         const step = this.video.duration / numberOfImages;
 
@@ -129,7 +129,7 @@ export class VideoSnap {
      * Set video to a specific time and wait while video rewind.
      * Then draw image on canvas and convert it to Blob URL
      */
-    private async captureImage(time: number, quality: number = 1): Promise<string> {
+    private async captureImage(time: number, quality: number = 1): Promise<Blob> {
         await VideoSnap.rewindVideo(this.video, time);
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
@@ -139,17 +139,17 @@ export class VideoSnap {
     /**
      * Convert image from canvas into Blob url in JPG (PNG in Edge)
      */
-    private convertCanvasImageToBlobUrl(canvas: HTMLCanvasElement, quality: number): Promise<string> {
+    private convertCanvasImageToBlobUrl(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
         return new Promise((resolve) => {
             if (canvas.toBlob) {
                 canvas.toBlob(
-                    (blob: Blob | null) => resolve(window.URL.createObjectURL(blob)),
+                    (blob: Blob | null) => resolve(blob!),
                     'image/jpeg',
                     quality,
                 );
             } else if ((canvas as any).msToBlob) {
                 const blob = (canvas as any).msToBlob();
-                resolve(window.URL.createObjectURL(blob));
+                resolve(blob);
             } else {
                 throw new Error('canvas.toBlob and canvas.msToBlob are not supported');
             }
